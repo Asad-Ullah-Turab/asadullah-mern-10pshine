@@ -1,4 +1,4 @@
-function Homw() {
+function Home() {
   return (
     <div>
       <h1>Home</h1>
@@ -7,4 +7,4 @@ function Homw() {
   );
 }
 
-export default Homw;
+export default Home;

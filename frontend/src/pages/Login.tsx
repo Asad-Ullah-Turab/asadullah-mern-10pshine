@@ -1,5 +1,7 @@
+import React from "react";
+
 function Login() {
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = (e: React.SyntheticEvent) => {
     e.preventDefault();
     // Implement login logic here
     console.log("Login form submitted");
@@ -13,9 +15,9 @@ function Login() {
       }}
     >
       <div className="bg-white bg-opacity-90 rounded-xl shadow-2xl p-8 w-full max-w-md flex flex-col items-center">
-        <div className="w-50 h-20 bg-bue-500 mb-12 -ml-5">
+        <div className="w-50 h-20 mb-12 -ml-5">
           <img
-            src="assets/logo.png"
+            src="/assets/logo.png"
             alt="KeepIT Logo"
             className="w-full h-full object-cover"
           />
