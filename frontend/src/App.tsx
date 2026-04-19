@@ -1,8 +1,15 @@
+import { Route, Routes } from "react-router";
+import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
+import Home from "./pages/Home";
+
 function App() {
   return (
-    <div className="p-10 bg-orange-500 text-center text-white font-bold text-4xl">
-      Notes Application
-    </div>
+    <Routes>
+      <Route index element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
