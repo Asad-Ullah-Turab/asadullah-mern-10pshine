@@ -7,13 +7,17 @@ const clientOptions: mongoose.ConnectOptions = {
 
 const uri = config.MONGO_URI;
 
-async function ConnectToMongodb() {
+async function connectToMongodb() {
   try {
     await mongoose.connect(uri, clientOptions);
-    await mongoose.connection.db?.admin().command({ ping: 1 });
+    if (!mongoose.connection.db) {
+      throw new Error("Failed to get MongoDB database instance");
+    }
+    await mongoose.connection.db.admin().command({ ping: 1 });
     console.log("Successfully connected to MongoDB!");
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
+    throw error;
   }
 }
 
@@ -26,4 +30,4 @@ async function disconnectMongodb() {
   }
 }
 
-export { ConnectToMongodb, disconnectMongodb };
+export { connectToMongodb, disconnectMongodb };

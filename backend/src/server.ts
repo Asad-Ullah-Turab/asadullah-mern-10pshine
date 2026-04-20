@@ -1,13 +1,13 @@
 import http from "http";
 import app from "./app.ts";
 import config from "./config/env.ts";
-import { ConnectToMongodb, disconnectMongodb } from "./services/mongodb.ts";
+import { connectToMongodb, disconnectMongodb } from "./services/mongodb.ts";
 
 const PORT = config.PORT;
 const server = http.createServer(app);
 
 async function startServer() {
-  await ConnectToMongodb();
+  await connectToMongodb();
   server.listen(PORT, () => {
     console.log(`Server is listening on PORT: ${PORT}`);
   });
