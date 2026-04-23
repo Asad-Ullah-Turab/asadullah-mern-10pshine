@@ -22,8 +22,7 @@ function Login() {
     email,
     password,
   }) => {
-    const response = await LoginWithEmailPassword(email, password);
-    console.log(response);
+    await LoginWithEmailPassword(email, password);
   };
 
   return (
