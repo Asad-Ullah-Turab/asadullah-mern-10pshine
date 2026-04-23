@@ -1,6 +1,6 @@
 import http from "http";
 import app from "./app.ts";
-import config from "./config/env.ts";
+import config from "./config/config.ts";
 import { connectToMongodb, disconnectMongodb } from "./services/mongodb.ts";
 
 const PORT = config.PORT;
