@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import config from "../config/env.ts";
+import config from "../config/config.ts";
 
 const clientOptions: mongoose.ConnectOptions = {
   serverApi: { version: "1", strict: true, deprecationErrors: true },

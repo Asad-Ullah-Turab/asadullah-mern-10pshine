@@ -1,15 +1,31 @@
-import React from "react";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import AuthButton from "./components/AuthButton";
 import AuthWithGoogleBtn from "./components/AuthWithGoogleBtn";
 import AuthWithGithubBtn from "./components/AuthWithGithubBtn";
 import Logo from "../../components/ui/Logo";
+import { LoginWithEmailPassword } from "../../api/auth";
+import FormError from "./components/FormError";
+
+interface IFormInput {
+  email: string;
+  password: string;
+}
 
 function Login() {
-  const handleLogin = (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    // Implement login logic here
-    console.log("Login form submitted");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<IFormInput>();
+
+  const handleLogin: SubmitHandler<IFormInput> = async ({
+    email,
+    password,
+  }) => {
+    const response = await LoginWithEmailPassword(email, password);
+    console.log(response);
   };
+
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-cover bg-center"
@@ -20,17 +36,28 @@ function Login() {
     >
       <div className="bg-white bg-opacity-90 rounded-xl shadow-2xl p-8 w-full max-w-md flex flex-col items-center">
         <Logo className="w-50 h-20 mb-12 -ml-5" />
-        <form className="w-full flex flex-col gap-4" onSubmit={handleLogin}>
-          <input
-            type="email"
-            placeholder="Email"
-            className="px-4 py-3 rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="px-4 py-3 rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-          />
+        <form
+          className="w-full flex flex-col gap-4"
+          onSubmit={handleSubmit(handleLogin)}
+        >
+          <div>
+            <input
+              type="email"
+              placeholder="Email"
+              className="px-4 py-3 w-full rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              {...register("email", { required: "Email is required" })}
+            />
+            <FormError text={errors.email?.message} />
+          </div>
+          <div>
+            <input
+              type="password"
+              placeholder="Password"
+              className="px-4 py-3 w-full rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              {...register("password", { required: "Password is required" })}
+            />
+            <FormError text={errors.password?.message} />
+          </div>
           <AuthButton className="mt-4" text="Login" />
         </form>
         <div className="flex items-center my-6 w-full">

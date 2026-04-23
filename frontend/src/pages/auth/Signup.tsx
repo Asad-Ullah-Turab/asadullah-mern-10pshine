@@ -3,7 +3,7 @@ import Logo from "../../components/ui/Logo";
 import AuthButton from "./components/AuthButton";
 import AuthWithGithubBtn from "./components/AuthWithGithubBtn";
 import AuthWithGoogleBtn from "./components/AuthWithGoogleBtn";
-import Error from "./components/Error";
+import FormError from "./components/FormError";
 
 interface IFormInput {
   email: string;
@@ -38,7 +38,7 @@ function Signup() {
         >
           <div className="w-full">
             <input
-              type="text"
+              type="email"
               placeholder="Email"
               className="px-4 py-3 w-full rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
               {...register("email", {
@@ -49,7 +49,7 @@ function Signup() {
                 },
               })}
             />
-            <Error error={errors.email?.message} />
+            <FormError text={errors.email?.message} />
           </div>
           <div>
             <input
@@ -74,7 +74,7 @@ function Signup() {
                 },
               })}
             />
-            <Error error={errors.password?.message} />
+            <FormError text={errors.password?.message} />
           </div>
           <div>
             <input
@@ -89,7 +89,7 @@ function Signup() {
                 },
               })}
             />
-            <Error error={errors.confirmPassword?.message} />
+            <FormError text={errors.confirmPassword?.message} />
           </div>
           <AuthButton className="mt-4" text="Sign Up" />
         </form>
