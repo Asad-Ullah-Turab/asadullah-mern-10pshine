@@ -1,7 +1,7 @@
 import React from "react";
-import LoginButton from "./components/LoginButton";
-import LoginWithGoogleBtn from "./components/LoginWithGoogleBtn";
-import LoginWithGithubBtn from "./components/LoginWithGithubBtn";
+import AuthButton from "./components/AuthButton";
+import AuthWithGoogleBtn from "./components/AuthWithGoogleBtn";
+import AuthWithGithubBtn from "./components/AuthWithGithubBtn";
 import Logo from "../../components/ui/Logo";
 
 function Login() {
@@ -31,7 +31,7 @@ function Login() {
             placeholder="Password"
             className="px-4 py-3 rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
           />
-          <LoginButton className="mt-4" />
+          <AuthButton className="mt-4" text="Login" />
         </form>
         <div className="flex items-center my-6 w-full">
           <div className="grow h-px bg-gray-300" />
@@ -39,8 +39,8 @@ function Login() {
           <div className="grow h-px bg-gray-300" />
         </div>
         <div className="flex flex-col gap-3 w-full">
-          <LoginWithGoogleBtn />
-          <LoginWithGithubBtn />
+          <AuthWithGoogleBtn text="Login With Google" />
+          <AuthWithGithubBtn text="Login With GitHub" />
         </div>
       </div>
     </div>
