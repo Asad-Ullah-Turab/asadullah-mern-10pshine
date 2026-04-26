@@ -1,10 +1,13 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
+import { useState } from "react";
+
 import AuthButton from "./components/AuthButton";
 import AuthWithGoogleBtn from "./components/AuthWithGoogleBtn";
 import AuthWithGithubBtn from "./components/AuthWithGithubBtn";
 import Logo from "../../components/ui/Logo";
 import { LoginWithEmailPassword } from "../../api/auth";
 import FormError from "./components/FormError";
+import { redirect } from "react-router";
 
 interface IFormInput {
   email: string;
@@ -12,6 +15,7 @@ interface IFormInput {
 }
 
 function Login() {
+  const [loginError, setLoginError] = useState<string>("");
   const {
     register,
     handleSubmit,
@@ -22,7 +26,13 @@ function Login() {
     email,
     password,
   }) => {
-    await LoginWithEmailPassword(email, password);
+    const response = await LoginWithEmailPassword(email, password);
+    if (response.error) {
+      setLoginError(response.error);
+    } else {
+      console.log("Login successful:", response.user);
+      redirect("/");
+    }
   };
 
   return (
@@ -57,6 +67,7 @@ function Login() {
             />
             <FormError text={errors.password?.message} />
           </div>
+          <FormError text={loginError} />
           <AuthButton className="mt-4" text="Login" />
         </form>
         <div className="flex items-center my-6 w-full">

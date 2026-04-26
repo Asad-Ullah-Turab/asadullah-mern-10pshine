@@ -2,7 +2,8 @@ import express from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { verifyUser } from "./auth.controller.ts";
-import config from "../../config/config.ts";
+import { localAuthMiddleware } from "../../middlewares/auth/auth.middleware.ts";
+import type { IUser } from "../../models/user/user.model.ts";
 
 passport.use(
   new LocalStrategy(
@@ -18,18 +19,12 @@ passport.serializeUser((user, done) => {
   done(null, user);
 });
 
-passport.deserializeUser((user: any, done) => {
+passport.deserializeUser((user: IUser, done) => {
   done(null, user);
 });
 
 const authRouter = express.Router();
 
-authRouter.post(
-  "/password",
-  passport.authenticate("local", {
-    successRedirect: `${config.FRONTEND_URL}/`,
-    failureRedirect: `${config.FRONTEND_URL}/login?error=Invalid%20credentials`,
-  }),
-);
+authRouter.post("/password", localAuthMiddleware);
 
 export default authRouter;
