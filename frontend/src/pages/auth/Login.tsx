@@ -7,7 +7,7 @@ import AuthWithGithubBtn from "./components/AuthWithGithubBtn";
 import Logo from "../../components/ui/Logo";
 import { LoginWithEmailPassword } from "../../api/auth";
 import FormError from "./components/FormError";
-import { redirect } from "react-router";
+import { useNavigate } from "react-router";
 
 interface IFormInput {
   email: string;
@@ -16,6 +16,7 @@ interface IFormInput {
 
 function Login() {
   const [loginError, setLoginError] = useState<string>("");
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -31,7 +32,7 @@ function Login() {
       setLoginError(response.error);
     } else {
       console.log("Login successful:", response.user);
-      redirect("/");
+      navigate("/");
     }
   };
 
