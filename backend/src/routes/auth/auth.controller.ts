@@ -6,7 +6,7 @@ const verifyUser: VerifyFunction = async (email, password, done) => {
   if (!user) {
     return done(null, false, { message: "Invalid email or password" });
   }
-  return done(null, { user });
+  return done(null, user);
 };
 
 export { verifyUser };

@@ -7,9 +7,14 @@ if (!MONGO_URI) {
   throw new Error("MONGO_URI is required in environment variables");
 }
 
-const SESSION_SECRET = process.env.SESSION_SECRET;
-if (!SESSION_SECRET) {
-  throw new Error("SESSION_SECRET is required in environment variables");
+const SESSION_SECRET_01 = process.env.SESSION_SECRET;
+if (!SESSION_SECRET_01) {
+  throw new Error("SESSION_SECRET_01 is required in environment variables");
+}
+
+const SESSION_SECRET_02 = process.env.SESSION_SECRET;
+if (!SESSION_SECRET_02) {
+  throw new Error("SESSION_SECRET_02 is required in environment variables");
 }
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -17,14 +22,16 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 interface Config {
   PORT: number;
   MONGO_URI: string;
-  SESSION_SECRET: string;
+  SESSION_SECRET_01: string;
+  SESSION_SECRET_02: string;
   FRONTEND_URL: string;
 }
 
 const config: Config = {
   PORT: Number(process.env.PORT) || 3000,
   MONGO_URI,
-  SESSION_SECRET,
+  SESSION_SECRET_01,
+  SESSION_SECRET_02,
   FRONTEND_URL,
 };
 

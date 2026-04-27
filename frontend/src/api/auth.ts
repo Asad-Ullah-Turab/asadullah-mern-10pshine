@@ -4,21 +4,20 @@ async function LoginWithEmailPassword(email: string, password: string) {
   try {
     const response = await fetch(config.BACKEND_URL + "/auth/password", {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password }),
     });
     const data = await response.json();
-    if (data.success) {
+    if (!response.ok) {
       return {
-        user: data.user,
-      };
-    } else {
-      return {
-        error: data.message || "Invalid credentials",
+        error: data.message || "Login failed",
       };
     }
+
+    return { user: data.user };
   } catch (error) {
     console.error("Login failed:", error);
     return {
