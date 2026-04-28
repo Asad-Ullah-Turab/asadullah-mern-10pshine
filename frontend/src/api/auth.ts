@@ -26,4 +26,21 @@ async function LoginWithEmailPassword(email: string, password: string) {
   }
 }
 
-export { LoginWithEmailPassword };
+async function GetLoggedInUser() {
+  try {
+    const response = await fetch(config.BACKEND_URL + "/auth/me", {
+      method: "GET",
+      credentials: "include",
+    });
+    const data = await response.json();
+    if (response.ok) {
+      return data.user;
+    }
+    return { error: data.message || "User not found" };
+  } catch (error) {
+    console.error("Failed to fetch logged in user:", error);
+    return { error: "An error occurred while fetching user" };
+  }
+}
+
+export { LoginWithEmailPassword, GetLoggedInUser };
