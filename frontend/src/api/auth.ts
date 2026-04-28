@@ -1,3 +1,4 @@
+import { error } from "console";
 import config from "../config/config";
 
 async function LoginWithEmailPassword(email: string, password: string) {
@@ -26,4 +27,21 @@ async function LoginWithEmailPassword(email: string, password: string) {
   }
 }
 
-export { LoginWithEmailPassword };
+async function GetLoggedInUser() {
+  try {
+    const response = await fetch(config.BACKEND_URL + "/auth/me", {
+      method: "GET",
+      credentials: "include",
+    });
+    const user = await response.json();
+    if (response.ok) {
+      return user;
+    }
+    return { error: user.message || "User not found" };
+  } catch (error) {
+    console.error("Failed to fetch logged in user:", error);
+    return { error: "An error occurred while fetching user" };
+  }
+}
+
+export { LoginWithEmailPassword, GetLoggedInUser };
