@@ -1,4 +1,3 @@
-import { error } from "console";
 import config from "../config/config";
 
 async function LoginWithEmailPassword(email: string, password: string) {
@@ -33,11 +32,11 @@ async function GetLoggedInUser() {
       method: "GET",
       credentials: "include",
     });
-    const user = await response.json();
+    const data = await response.json();
     if (response.ok) {
-      return user;
+      return data.user;
     }
-    return { error: user.message || "User not found" };
+    return { error: data.message || "User not found" };
   } catch (error) {
     console.error("Failed to fetch logged in user:", error);
     return { error: "An error occurred while fetching user" };

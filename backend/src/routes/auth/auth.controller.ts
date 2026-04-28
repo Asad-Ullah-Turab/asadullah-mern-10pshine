@@ -9,4 +9,8 @@ const verifyUser: VerifyFunction = async (email, password, done) => {
   return done(null, user);
 };
 
-export { verifyUser };
+const getAuthenticatedUser = (req: any, res: any) => {
+  res.json({ user: req.user });
+};
+
+export { verifyUser, getAuthenticatedUser };

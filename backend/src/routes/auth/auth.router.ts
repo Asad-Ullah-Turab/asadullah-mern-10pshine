@@ -1,8 +1,11 @@
 import express from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { verifyUser } from "./auth.controller.ts";
-import { localAuthMiddleware } from "../../middlewares/auth/auth.middleware.ts";
+import { getAuthenticatedUser, verifyUser } from "./auth.controller.ts";
+import {
+  ensureAuthenticated,
+  localAuthMiddleware,
+} from "../../middlewares/auth/auth.middleware.ts";
 import type { IUser } from "../../models/user/user.model.ts";
 
 passport.use(
@@ -27,5 +30,6 @@ passport.deserializeUser((user: IUser, done) => {
 const authRouter = express.Router();
 
 authRouter.post("/password", localAuthMiddleware);
+authRouter.get("/me", ensureAuthenticated, getAuthenticatedUser);
 
 export default authRouter;
