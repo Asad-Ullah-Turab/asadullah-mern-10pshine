@@ -1,7 +1,7 @@
 import express from "express";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { getAuthenticatedUser, verifyUser } from "./auth.controller.ts";
+import { getAuthenticatedUser, signUp, verifyUser } from "./auth.controller.ts";
 import {
   ensureAuthenticated,
   localAuthMiddleware,
@@ -23,7 +23,6 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((user: IUser, done) => {
-  console.log("Deserializing user: ", user);
   done(null, user);
 });
 
@@ -31,5 +30,6 @@ const authRouter = express.Router();
 
 authRouter.post("/password", localAuthMiddleware);
 authRouter.get("/me", ensureAuthenticated, getAuthenticatedUser);
+authRouter.post("/signup", signUp);
 
 export default authRouter;

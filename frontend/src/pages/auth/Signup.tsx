@@ -4,16 +4,33 @@ import AuthButton from "./components/AuthButton";
 import AuthWithGithubBtn from "./components/AuthWithGithubBtn";
 import AuthWithGoogleBtn from "./components/AuthWithGoogleBtn";
 import FormError from "./components/FormError";
+import { signUpWithEmailPassword } from "../../api/auth";
+import { useState } from "react";
+import { useNavigate } from "react-router";
 
 interface IFormInput {
+  name: string;
   email: string;
   password: string;
   confirmPassword: string;
 }
 
 function Signup() {
-  const handleSingup: SubmitHandler<IFormInput> = (data) => {
-    console.log(data);
+  const [signUpError, setSignUpError] = useState<string>("");
+  const navigate = useNavigate();
+
+  const handleSingup: SubmitHandler<IFormInput> = async ({
+    name,
+    email,
+    password,
+  }) => {
+    const response = await signUpWithEmailPassword(name, email, password);
+    if (response.error) {
+      setSignUpError(response.error);
+    } else {
+      setSignUpError("");
+      navigate("/");
+    }
   };
 
   const {
@@ -36,7 +53,18 @@ function Signup() {
           className="w-full flex flex-col gap-4"
           onSubmit={handleSubmit(handleSingup)}
         >
-          <div className="w-full">
+          <div>
+            <input
+              type="text"
+              placeholder="Name"
+              className="px-4 py-3 w-full rounded-lg border border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              {...register("name", {
+                required: "Name is required",
+              })}
+            />
+            <FormError text={errors.name?.message} />
+          </div>
+          <div>
             <input
               type="email"
               placeholder="Email"
@@ -70,7 +98,7 @@ function Signup() {
                   value:
                     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,20}$/,
                   message:
-                    "Password must include a number, and special character",
+                    "Password must include an uppercase, a number, and special character",
                 },
               })}
             />
@@ -91,6 +119,7 @@ function Signup() {
             />
             <FormError text={errors.confirmPassword?.message} />
           </div>
+          <FormError text={signUpError} />
           <AuthButton className="mt-4" text="Sign Up" />
         </form>
         <div className="flex items-center my-6 w-full">

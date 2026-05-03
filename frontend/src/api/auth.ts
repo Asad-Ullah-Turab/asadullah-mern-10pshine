@@ -43,4 +43,33 @@ async function GetLoggedInUser() {
   }
 }
 
-export { LoginWithEmailPassword, GetLoggedInUser };
+async function signUpWithEmailPassword(
+  name: string,
+  email: string,
+  password: string,
+) {
+  try {
+    const response = await fetch(config.BACKEND_URL + "/auth/signup", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return {
+        error: data.message || "Signup failed",
+      };
+    }
+    return { user: data.user };
+  } catch (error) {
+    console.error("Signup failed:", error);
+    return {
+      error: "An error occurred during signup. Please try again.",
+    };
+  }
+}
+
+export { LoginWithEmailPassword, GetLoggedInUser, signUpWithEmailPassword };

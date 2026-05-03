@@ -30,4 +30,39 @@ async function getUser({
   }
 }
 
-export { getUser, type IUser };
+async function existsUserWithEmail(email: string) {
+  try {
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return false;
+  }
+}
+
+async function createUser({
+  name,
+  email,
+  password,
+}: {
+  name: string;
+  email: string;
+  password: string;
+}) {
+  try {
+    const newUser = await userModel.create({ name, email, password });
+    return {
+      id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+    } as IUser;
+  } catch (error) {
+    console.error("Error creating user:", error);
+    return null;
+  }
+}
+
+export { getUser, existsUserWithEmail, createUser, type IUser };

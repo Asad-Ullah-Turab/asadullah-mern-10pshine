@@ -21,17 +21,16 @@ function App() {
   useEffect(() => {
     const fetchUser = async () => {
       const user = await GetLoggedInUser();
-      if (user.error) {
+      if (!user || user.error) {
         setUser(null);
         setLoading(false);
-        console.log("Error fetching user: ", user.error);
         return;
       }
       setUser(user);
       setLoading(false);
     };
     fetchUser();
-  }, [user]);
+  }, []);
 
   return (
     <UserContext.Provider value={{ user, loading, isAuthenticated }}>
