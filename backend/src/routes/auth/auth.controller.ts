@@ -3,7 +3,9 @@ import {
   createUser,
   existsUserWithEmail,
   getUser,
+  getUserByEmail,
 } from "../../models/user/user.model.ts";
+import type { Profile } from "passport-google-oauth20";
 
 const verifyUser: VerifyFunction = async (email, password, done) => {
   const user = await getUser({ email, password });
@@ -13,49 +15,55 @@ const verifyUser: VerifyFunction = async (email, password, done) => {
   return done(null, user);
 };
 
+// TODO: Handle case where a user has an account with email/password and tries to sign in with Google using the same email.
+const verifyGoogleUser = async (
+  _accessToken: string,
+  _refreshToken: string,
+  profile: Profile,
+  done: (error: any, user: any) => void,
+) => {
+  try {
+    let user = await getUserByEmail(profile.emails?.[0]?.value || "");
+    if (user) {
+      return done(null, user);
+    }
+    user = await createUser({
+      name: profile.displayName,
+      email: profile.emails?.[0]?.value || "",
+      type: "google",
+    });
+    return done(null, user);
+  } catch (error) {
+    return done(error, null);
+  }
+};
+
 const getAuthenticatedUser = (req: any, res: any) => {
   res.json({ user: req.user });
 };
 
-// TODO: Add middleware to validate email and password before creating user
 const signUp = async (req: any, res: any) => {
   const { name, email, password } = req.body;
-
-  if (!name || !email || !password) {
-    return res
-      .status(400)
-      .json({ message: "Name, Email and Password are required" });
-  }
-
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,20}$/;
-
-  if (!passwordRegex.test(password)) {
-    return res.status(400).json({
-      message:
-        "Password must be 10-20 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character",
-    });
-  }
 
   if (await existsUserWithEmail(email)) {
     return res.status(400).json({ message: "Email is already in use" });
   }
-
-  const user = await createUser({ name, email, password });
-  if (!user) {
-    return res.status(500).json({ message: "Error creating user" });
-  }
-
-  req.login(user, (err: any) => {
-    if (err) {
-      return res
-        .status(500)
-        .json({ message: "Error logging in after sign up" });
-    }
-    return res.json({
-      message: "User created and logged in successfully",
+  try {
+    const user = await createUser({ name, email, password, type: "local" });
+    req.login(user, (err: Error) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ message: "Error logging in after sign up" });
+      }
+      return res.json({
+        message: "User created and logged in successfully",
+      });
     });
-  });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ message });
+  }
 };
 
-export { verifyUser, getAuthenticatedUser, signUp };
+export { verifyUser, verifyGoogleUser, getAuthenticatedUser, signUp };
