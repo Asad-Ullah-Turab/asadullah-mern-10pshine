@@ -4,8 +4,10 @@ import {
   existsUserWithEmail,
   checkUser,
   getUserByEmail,
+  addAuthTypeToUser,
 } from "../../models/user/user.model.ts";
-import type { Profile } from "passport-google-oauth20";
+import type { Profile as GoogleProfile } from "passport-google-oauth20";
+import type { Profile as GitHubProfile } from "passport-github2";
 
 const verifyUser: VerifyFunction = async (email, password, done) => {
   const user = await checkUser({ email, password });
@@ -15,24 +17,58 @@ const verifyUser: VerifyFunction = async (email, password, done) => {
   return done(null, user);
 };
 
-// TODO: Handle case where a user has an account with email/password and tries to sign in with Google using the same email.
 const verifyGoogleUser = async (
   _accessToken: string,
   _refreshToken: string,
-  profile: Profile,
+  profile: GoogleProfile,
   done: (error: any, user: any) => void,
 ) => {
   try {
-    let user = await getUserByEmail(profile.emails?.[0]?.value || "");
+    if (!profile.emails?.[0]?.value) {
+      return done(new Error("No email found in Google profile"), null);
+    }
+    let user = await getUserByEmail(profile.emails[0].value);
     if (user) {
+      if (!user.type.includes("google")) {
+        addAuthTypeToUser(user, "google");
+      }
+      return done(null, user);
+    }
+
+    user = await createUser({
+      name: profile.displayName,
+      email: profile.emails[0].value,
+      type: ["google"],
+    });
+    return done(null, user);
+  } catch (error) {
+    return done(error, null);
+  }
+};
+
+const verifyGitHubUser = async (
+  _accessToken: string,
+  _refreshToken: string,
+  profile: GitHubProfile,
+  done: (error: any, user: any) => void,
+) => {
+  try {
+    if (!profile.emails?.[0]?.value) {
+      return done(new Error("No email found in Github profile"), null);
+    }
+    let user = await getUserByEmail(profile.emails[0].value);
+    if (user) {
+      if (!user.type.includes("github")) {
+        addAuthTypeToUser(user, "github");
+      }
       return done(null, user);
     }
     user = await createUser({
       name: profile.displayName,
-      email: profile.emails?.[0]?.value || "",
-      type: "google",
+      email: profile.emails[0].value,
+      type: ["github"],
     });
-    return done(null, user);
+    done(null, user);
   } catch (error) {
     return done(error, null);
   }
@@ -49,7 +85,7 @@ const signUp = async (req: any, res: any) => {
     return res.status(400).json({ message: "Email is already in use" });
   }
   try {
-    const user = await createUser({ name, email, password, type: "local" });
+    const user = await createUser({ name, email, password, type: ["local"] });
     req.login(user, (err: Error) => {
       if (err) {
         return res
@@ -66,4 +102,10 @@ const signUp = async (req: any, res: any) => {
   }
 };
 
-export { verifyUser, verifyGoogleUser, getAuthenticatedUser, signUp };
+export {
+  verifyUser,
+  verifyGoogleUser,
+  verifyGitHubUser,
+  getAuthenticatedUser,
+  signUp,
+};

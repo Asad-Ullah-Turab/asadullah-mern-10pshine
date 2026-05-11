@@ -27,6 +27,16 @@ if (!GOOGLE_CLIENT_SECRET) {
   throw new Error("GOOGLE_CLIENT_SECRET is required in environment variables");
 }
 
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+if (!GITHUB_CLIENT_ID) {
+  throw new Error("GITHUB_CLIENT_ID is required in environment variables");
+}
+
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+if (!GITHUB_CLIENT_SECRET) {
+  throw new Error("GITHUB_CLIENT_SECRET is required in environment variables");
+}
+
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 interface Config {
@@ -37,6 +47,8 @@ interface Config {
   FRONTEND_URL: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
 }
 
 const config: Config = {
@@ -47,6 +59,8 @@ const config: Config = {
   FRONTEND_URL,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
 };
 
 export default config;

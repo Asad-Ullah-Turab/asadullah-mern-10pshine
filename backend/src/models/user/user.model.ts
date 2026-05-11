@@ -5,7 +5,7 @@ interface IUser {
   id: Types.ObjectId;
   name: string;
   email: string;
-  type: "local" | "google" | "github";
+  type: Array<"local" | "google" | "github">;
 }
 
 async function checkUser({
@@ -76,7 +76,7 @@ async function createUser({
 }: {
   name: string;
   email: string;
-  type: "local" | "google" | "github";
+  type: Array<"local" | "google" | "github">;
   password?: string;
 }) {
   try {
@@ -96,10 +96,36 @@ async function createUser({
   }
 }
 
+async function addAuthTypeToUser(
+  user: IUser,
+  authType: "local" | "google" | "github",
+) {
+  try {
+    const userDoc = await userModel.findById(user.id);
+    if (!userDoc) {
+      throw new Error("User not found");
+    }
+    if (!userDoc.type.includes(authType)) {
+      userDoc.type.push(authType);
+      await userDoc.save();
+    }
+    return {
+      id: userDoc._id,
+      name: userDoc.name,
+      email: userDoc.email,
+      type: userDoc.type,
+    } as IUser;
+  } catch (error) {
+    console.error("Error adding auth type to user:", error);
+    return null;
+  }
+}
+
 export {
   checkUser,
   existsUserWithEmail,
   getUserByEmail,
   createUser,
+  addAuthTypeToUser,
   type IUser,
 };

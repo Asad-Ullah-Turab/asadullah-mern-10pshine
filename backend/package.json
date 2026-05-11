@@ -21,6 +21,7 @@
     "express-session": "^1.19.0",
     "mongoose": "^9.4.1",
     "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0"
   },
@@ -32,6 +33,7 @@
     "@types/express-session": "^1.19.0",
     "@types/node": "^25.6.0",
     "@types/passport": "^1.0.17",
+    "@types/passport-github2": "^1.2.9",
     "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-local": "^1.0.38",
     "eslint": "^10.2.0",

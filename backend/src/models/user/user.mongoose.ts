@@ -5,7 +5,7 @@ interface IUserSchema extends mongoose.Document {
   name: string;
   email: string;
   password?: string;
-  type: "local" | "google" | "github";
+  type: Array<"local" | "google" | "github">;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema<IUserSchema>({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String },
-  type: { type: String, enum: ["local", "google", "github"], required: true },
+  type: { type: [String], enum: ["local", "google", "github"], required: true },
 });
 
 userSchema.pre<IUserSchema>("save", async function () {
