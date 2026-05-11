@@ -2,13 +2,13 @@ import type { VerifyFunction } from "passport-local";
 import {
   createUser,
   existsUserWithEmail,
-  getUser,
+  checkUser,
   getUserByEmail,
 } from "../../models/user/user.model.ts";
 import type { Profile } from "passport-google-oauth20";
 
 const verifyUser: VerifyFunction = async (email, password, done) => {
-  const user = await getUser({ email, password });
+  const user = await checkUser({ email, password });
   if (!user) {
     return done(null, false, { message: "Invalid email or password" });
   }

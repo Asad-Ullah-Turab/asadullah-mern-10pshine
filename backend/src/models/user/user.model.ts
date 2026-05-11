@@ -8,7 +8,7 @@ interface IUser {
   type: "local" | "google" | "github";
 }
 
-async function getUser({
+async function checkUser({
   email,
   password,
 }: {
@@ -16,16 +16,21 @@ async function getUser({
   password: string;
 }) {
   try {
-    const user = await userModel.findOne({ email, password });
-    if (!user) {
+    const user = await userModel.findOne({ email });
+
+    if (!user || !user.password) {
       return null;
     }
-    return {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      type: user.type,
-    } as IUser;
+
+    if (await user.comparePassword(password)) {
+      return {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        type: user.type,
+      } as IUser;
+    }
+    return null;
   } catch (error) {
     console.error("Error fetching user:", error);
     return null;
@@ -91,4 +96,10 @@ async function createUser({
   }
 }
 
-export { getUser, existsUserWithEmail, getUserByEmail, createUser, type IUser };
+export {
+  checkUser,
+  existsUserWithEmail,
+  getUserByEmail,
+  createUser,
+  type IUser,
+};
