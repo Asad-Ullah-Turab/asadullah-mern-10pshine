@@ -29,4 +29,34 @@ function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
   return res.status(401).json({ success: false, message: "Unauthorized" });
 }
 
-export { localAuthMiddleware, ensureAuthenticated };
+function validateEmailAndPassword(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    return res
+      .status(400)
+      .json({ message: "Name, Email and Password are required" });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: "Invalid email format" });
+  }
+
+  const passwordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{10,20}$/;
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      message:
+        "Password must be 10-20 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character",
+    });
+  }
+
+  next();
+}
+
+export { localAuthMiddleware, ensureAuthenticated, validateEmailAndPassword };

@@ -13,6 +13,7 @@
     "prod": "node dist/server.js"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "connect-mongo": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -20,15 +21,20 @@
     "express-session": "^1.19.0",
     "mongoose": "^9.4.1",
     "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
+    "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
     "@types/node": "^25.6.0",
     "@types/passport": "^1.0.17",
+    "@types/passport-github2": "^1.2.9",
+    "@types/passport-google-oauth20": "^2.0.17",
     "@types/passport-local": "^1.0.38",
     "eslint": "^10.2.0",
     "globals": "^17.5.0",
