@@ -92,11 +92,16 @@ function getPreviewText(html: string) {
   return text.length > 140 ? `${text.slice(0, 140)}…` : text;
 }
 
+function normalizeSearchText(value: string) {
+  return value.toLowerCase().trim();
+}
+
 function Home() {
   const { user, loading, isAuthenticated } = useContext(UserContext);
   const [notes, setNotes] = useState<Note[]>(initialNotes);
   const [filter, setFilter] =
     useState<(typeof categories)[number]["value"]>("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [draft, setDraft] = useState<NoteDraft>(defaultDraft);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -107,6 +112,7 @@ function Home() {
   );
 
   const visibleNotes = useMemo(() => {
+    const normalizedSearch = normalizeSearchText(searchQuery);
     const sorted = [...notes].sort((left, right) => {
       if (left.pinned === right.pinned) {
         return (
@@ -117,10 +123,19 @@ function Home() {
       return left.pinned ? -1 : 1;
     });
 
-    return sorted.filter(
-      (note) => filter === "All" || note.category === filter,
-    );
-  }, [filter, notes]);
+    return sorted.filter((note) => {
+      const categoryMatches = filter === "All" || note.category === filter;
+      const searchableText = normalizeSearchText(
+        [note.title, stripHtml(note.content), note.category].join(" "),
+      );
+
+      const searchMatches =
+        normalizedSearch.length === 0 ||
+        searchableText.includes(normalizedSearch);
+
+      return categoryMatches && searchMatches;
+    });
+  }, [filter, notes, searchQuery]);
 
   const openComposer = (note?: Note) => {
     if (note) {
@@ -194,7 +209,11 @@ function Home() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(253,224,71,0.22),transparent_30%),radial-gradient(circle_at_top_right,rgba(251,146,60,0.16),transparent_22%),linear-gradient(180deg,#fffaf0_0%,#f8fafc_36%,#eef2ff_100%)] text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8">
-        <HomeHeader onCreateNote={() => openComposer()} />
+        <HomeHeader
+          onCreateNote={() => openComposer()}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
 
         {loading ? (
           <div className="grid flex-1 place-items-center rounded-4xl border border-white/60 bg-white/70 text-slate-600 shadow-[0_18px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
@@ -249,10 +268,14 @@ function Home() {
               {visibleNotes.length === 0 && (
                 <div className="rounded-4xl border border-dashed border-slate-300 bg-white/75 p-10 text-center shadow-[0_18px_70px_rgba(15,23,42,0.05)]">
                   <p className="text-lg font-semibold text-slate-900">
-                    No notes in this category yet.
+                    {searchQuery
+                      ? "No notes match your search."
+                      : "No notes in this category yet."}
                   </p>
                   <p className="mt-2 text-sm text-slate-600">
-                    Create a new note or switch filters in the sidebar.
+                    {searchQuery
+                      ? "Try a different keyword or clear the search bar."
+                      : "Create a new note or switch filters in the sidebar."}
                   </p>
                 </div>
               )}
