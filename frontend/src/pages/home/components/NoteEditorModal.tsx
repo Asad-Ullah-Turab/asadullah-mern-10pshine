@@ -8,6 +8,7 @@ interface NoteEditorModalProps {
   draft: NoteDraft;
   noteColors: string[];
   categories: CategoryOption[];
+  isSaving: boolean;
   onClose: () => void;
   onSave: () => void;
   onDelete: (id: string) => void;
@@ -20,6 +21,7 @@ export function NoteEditorModal({
   draft,
   noteColors,
   categories,
+  isSaving,
   onClose,
   onSave,
   onDelete,
@@ -44,6 +46,7 @@ export function NoteEditorModal({
           <button
             type="button"
             onClick={onClose}
+            disabled={isSaving}
             className="rounded-full bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
           >
             Close
@@ -139,9 +142,10 @@ export function NoteEditorModal({
               <button
                 type="button"
                 onClick={onSave}
+                disabled={isSaving}
                 className="rounded-full bg-slate-950 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
               >
-                Save note
+                {isSaving ? "Saving..." : "Save note"}
               </button>
 
               {selectedNote && (
@@ -151,6 +155,7 @@ export function NoteEditorModal({
                     onDelete(selectedNote.id);
                     onClose();
                   }}
+                  disabled={isSaving}
                   className="rounded-full bg-rose-100 px-4 py-3 text-sm font-medium text-rose-700 transition hover:bg-rose-200"
                 >
                   Delete note
@@ -159,8 +164,8 @@ export function NoteEditorModal({
             </div>
 
             <div className="rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-slate-700">
-              This editor is powered by ReactQuill and can be wired to backend
-              note objects later.
+              Notes are stored in MongoDB for the signed-in session and sync as
+              soon as you save.
             </div>
           </div>
         </div>

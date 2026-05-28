@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { CategoryOption, Note } from "../types";
 
 interface HomeSidebarProps {
@@ -9,6 +10,10 @@ interface HomeSidebarProps {
   onFilterChange: (value: CategoryOption["value"]) => void;
   notes: Note[];
   onCreateNote: () => void;
+  onImportNotes: (file: File) => void;
+  onExportJson: () => void;
+  onExportText: () => void;
+  isImporting: boolean;
 }
 
 export function HomeSidebar({
@@ -20,7 +25,13 @@ export function HomeSidebar({
   onFilterChange,
   notes,
   onCreateNote,
+  onImportNotes,
+  onExportJson,
+  onExportText,
+  isImporting,
 }: HomeSidebarProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   return (
     <aside className="rounded-4xl border border-white/70 bg-white/75 p-4 shadow-[0_18px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
       <button
@@ -75,16 +86,53 @@ export function HomeSidebar({
       <div className="mt-6 rounded-3xl bg-linear-to-br from-amber-100 to-orange-100 p-4">
         <p className="text-sm font-semibold text-slate-900">Quick actions</p>
         <p className="mt-2 text-sm leading-6 text-slate-700">
-          Create a note, color it, and assign a category before the backend is
-          ready.
+          Create, import, or export notes. Files sync with your account and can
+          be shared between devices.
         </p>
-        <button
-          type="button"
-          onClick={onCreateNote}
-          className="mt-4 rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
-        >
-          Create note
-        </button>
+        <div className="mt-4 grid gap-2">
+          <button
+            type="button"
+            onClick={onCreateNote}
+            className="rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+          >
+            Create note
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+            className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isImporting ? "Importing..." : "Import notes"}
+          </button>
+          <button
+            type="button"
+            onClick={onExportJson}
+            className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
+          >
+            Export as JSON
+          </button>
+          <button
+            type="button"
+            onClick={onExportText}
+            className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
+          >
+            Export as text
+          </button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,.txt,application/json,text/plain"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) {
+              onImportNotes(file);
+            }
+            event.currentTarget.value = "";
+          }}
+        />
       </div>
     </aside>
   );

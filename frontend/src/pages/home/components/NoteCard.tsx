@@ -1,5 +1,36 @@
 import type { Note } from "../types";
 
+function formatUpdatedAt(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  const diffMinutes = Math.round((Date.now() - date.getTime()) / 60000);
+  if (diffMinutes < 1) {
+    return "Just now";
+  }
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  if (diffDays < 7) {
+    return `${diffDays}d ago`;
+  }
+
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: diffDays >= 365 ? "numeric" : undefined,
+  });
+}
+
 interface NoteCardProps {
   note: Note;
   previewText: string;
@@ -54,7 +85,7 @@ export function NoteCard({
       </button>
 
       <div className="mt-4 flex items-center justify-between text-xs text-slate-600">
-        <span>{note.updatedAt}</span>
+        <span>{formatUpdatedAt(note.updatedAt)}</span>
         <button
           type="button"
           onClick={() => onEdit(note)}
