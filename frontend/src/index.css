@@ -8,3 +8,77 @@
 @theme {
   --font-montserrat: Montserrat;
 }
+
+html {
+  font-family: var(--font-montserrat), system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: #f8fafc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.ProseMirror {
+  min-height: 220px;
+  padding: 1rem;
+  outline: none;
+}
+
+.ProseMirror p {
+  margin: 0 0 0.75rem;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.ProseMirror blockquote {
+  margin: 0 0 0.75rem;
+  padding-left: 1rem;
+  border-left: 3px solid #f59e0b;
+  color: #475569;
+}
+
+.ProseMirror hr {
+  margin: 1rem 0;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+}
+
+.ql-toolbar.ql-snow {
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  border-radius: 28px 28px 0 0;
+  background: rgba(248, 250, 252, 0.92);
+  padding: 12px;
+}
+
+.ql-container.ql-snow {
+  border: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.ql-editor {
+  min-height: 220px;
+  padding: 16px 18px 22px;
+  color: #0f172a;
+}
+
+.ql-editor.ql-blank::before {
+  left: 18px;
+  color: #94a3b8;
+  font-style: normal;
+}
+
+.ql-snow .ql-picker-label::before,
+.ql-snow .ql-picker-item::before {
+  color: #0f172a;
+}
