@@ -67,7 +67,7 @@ export function NoteCard({
         <button
           type="button"
           onClick={() => onDelete(note.id)}
-          className="rounded-full bg-white/70 p-2 text-slate-600 transition hover:bg-white hover:text-rose-600"
+          className="rounded-full bg-white/70 px-2.5 py-0.5 text-slate-600 transition hover:bg-red-500 hover:text-white"
           aria-label={`Delete ${note.title}`}
         >
           ✕

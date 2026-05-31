@@ -1,6 +1,12 @@
 import express from "express";
 import passport from "passport";
-import { getAuthenticatedUser, signUp } from "./auth.controller.ts";
+import {
+  getAuthenticatedUser,
+  signUp,
+  updateProfile,
+  logout,
+  deleteAccount,
+} from "./auth.controller.ts";
 import {
   ensureAuthenticated,
   localAuthMiddleware,
@@ -11,6 +17,9 @@ import "./strategies/index.ts";
 const authRouter = express.Router();
 
 authRouter.get("/me", ensureAuthenticated, getAuthenticatedUser);
+authRouter.put("/me", ensureAuthenticated, updateProfile);
+authRouter.delete("/me", ensureAuthenticated, deleteAccount);
+authRouter.post("/logout", ensureAuthenticated, logout);
 
 authRouter.post("/password", localAuthMiddleware);
 authRouter.post("/signup", signUp);

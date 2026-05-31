@@ -122,9 +122,15 @@ async function deleteNoteForUser(userId: string, noteId: string) {
 	return note ? serializeNote(note) : null;
 }
 
+async function deleteNotesByUserId(userId: string) {
+	const result = await noteModel.deleteMany({ userId });
+	return result.deletedCount ?? 0;
+}
+
 export {
 	createNoteForUser,
 	deleteNoteForUser,
+	deleteNotesByUserId,
 	getNoteById,
 	getNotesByUserId,
 	updateNoteForUser,

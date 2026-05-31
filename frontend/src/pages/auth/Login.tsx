@@ -7,7 +7,9 @@ import AuthWithGithubBtn from "./components/AuthWithGithubBtn";
 import Logo from "../../components/ui/Logo";
 import { LoginWithEmailPassword } from "../../api/auth";
 import FormError from "./components/FormError";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useContext } from "react";
+import UserContext from "../../store/UserContext";
 
 interface IFormInput {
   email: string;
@@ -17,6 +19,7 @@ interface IFormInput {
 function Login() {
   const [loginError, setLoginError] = useState<string>("");
   const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
   const {
     register,
     handleSubmit,
@@ -32,6 +35,9 @@ function Login() {
       setLoginError(response.error);
     } else {
       console.log("Login successful:", response.user);
+      if (response.user) {
+        setUser(response.user);
+      }
       navigate("/");
     }
   };
@@ -80,6 +86,13 @@ function Login() {
           <AuthWithGoogleBtn text="Login With Google" />
           <AuthWithGithubBtn text="Login With GitHub" />
         </div>
+
+        <p className="mt-6 text-sm text-gray-600">
+          Need an account?{" "}
+          <Link to="/signup" className="font-semibold text-blue-600 hover:underline">
+            Sign up
+          </Link>
+        </p>
       </div>
     </div>
   );

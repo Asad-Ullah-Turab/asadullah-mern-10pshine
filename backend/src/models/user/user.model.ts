@@ -8,6 +8,10 @@ interface IUser {
   type: Array<"local" | "google" | "github">;
 }
 
+interface IUserProfileUpdate {
+  name?: string;
+}
+
 async function checkUser({
   email,
   password,
@@ -121,11 +125,50 @@ async function addAuthTypeToUser(
   }
 }
 
+async function updateUserProfileById(
+  userId: string,
+  updates: IUserProfileUpdate,
+) {
+  try {
+    const userDoc = await userModel.findByIdAndUpdate(
+      userId,
+      { $set: { ...(updates.name ? { name: updates.name.trim() } : {}) } },
+      { new: true, runValidators: true },
+    );
+
+    if (!userDoc) {
+      return null;
+    }
+
+    return {
+      id: userDoc._id,
+      name: userDoc.name,
+      email: userDoc.email,
+      type: userDoc.type,
+    } as IUser;
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    throw error;
+  }
+}
+
+async function deleteUserById(userId: string) {
+  try {
+    const deletedUser = await userModel.findByIdAndDelete(userId);
+    return Boolean(deletedUser);
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    throw error;
+  }
+}
+
 export {
   checkUser,
   existsUserWithEmail,
   getUserByEmail,
   createUser,
   addAuthTypeToUser,
+  updateUserProfileById,
+  deleteUserById,
   type IUser,
 };

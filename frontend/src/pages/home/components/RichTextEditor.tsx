@@ -13,7 +13,7 @@ const modules = {
     [{ list: "ordered" }, { list: "bullet" }],
     [{ indent: "-1" }, { indent: "+1" }],
     [{ align: [] }],
-    ["blockquote", "link", "clean"],
+    ["blockquote", "clean"],
   ],
 };
 
