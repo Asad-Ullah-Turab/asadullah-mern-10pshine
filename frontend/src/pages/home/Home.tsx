@@ -1,10 +1,11 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import UserContext from "../../store/UserContext";
-import { type CategoryOption, type Note, type NoteDraft } from "./types";
+import { type CategoryOption, type Note, type NoteDraft, type NoteCategory } from "./types";
 import { HomeHeader } from "./components/HomeHeader";
 import { HomeSidebar } from "./components/HomeSidebar";
 import { NoteCard } from "./components/NoteCard";
 import { NoteEditorModal } from "./components/NoteEditorModal";
+import { createNote, deleteNote, getNotes, updateNote } from "../../api/notes";
 
 const categories: CategoryOption[] = [
   { label: "All notes", value: "All" },
@@ -23,49 +24,6 @@ const noteColors = [
   "#f3f4f6",
 ];
 
-const initialNotes: Note[] = [
-  {
-    id: "1",
-    title: "Landing page copy",
-    content:
-      "<p>Use a cleaner promise for Keepit. Show quick capture, beautiful cards, and fast editing.</p><ul><li>Lead with speed</li><li>Highlight rich text</li><li>Keep it minimal</li></ul>",
-    color: "#fff7b2",
-    category: "Work",
-    updatedAt: "2h ago",
-    pinned: true,
-  },
-  {
-    id: "2",
-    title: "Weekend ideas",
-    content:
-      "<p>Record voice notes on mobile, capture receipts, and group quick thoughts by color.</p>",
-    color: "#dbeafe",
-    category: "Ideas",
-    updatedAt: "Yesterday",
-    pinned: false,
-  },
-  {
-    id: "3",
-    title: "Client follow-up",
-    content:
-      "<p>Send the revised notes UI to the team once the backend mock API is ready.</p>",
-    color: "#d9f99d",
-    category: "Work",
-    updatedAt: "3d ago",
-    pinned: false,
-  },
-  {
-    id: "4",
-    title: "Reading list",
-    content:
-      "<p>Read about note-taking workflows, visual hierarchy, and empty-state polish.</p>",
-    color: "#f5d0fe",
-    category: "Research",
-    updatedAt: "1w ago",
-    pinned: false,
-  },
-];
-
 const defaultDraft: NoteDraft = {
   title: "",
   content: "<p></p>",
@@ -73,6 +31,13 @@ const defaultDraft: NoteDraft = {
   category: "Ideas",
   pinned: false,
 };
+
+const importableCategories: NoteCategory[] = [
+  "Ideas",
+  "Work",
+  "Personal",
+  "Research",
+];
 
 function stripHtml(html: string) {
   return html
@@ -96,20 +61,210 @@ function normalizeSearchText(value: string) {
   return value.toLowerCase().trim();
 }
 
+function buildNoteTitle(content: string, title: string) {
+  const trimmedTitle = title.trim();
+  return trimmedTitle || getPreviewTitle(content) || "Untitled note";
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Something went wrong";
+}
+
+function downloadFile(filename: string, content: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function toExportableNote(note: Note) {
+  return {
+    id: note.id,
+    title: note.title,
+    content: note.content,
+    color: note.color,
+    category: note.category,
+    pinned: note.pinned,
+    createdAt: note.createdAt,
+    updatedAt: note.updatedAt,
+  };
+}
+
+function exportNotesAsJson(notesToExport: Note[]) {
+  const content = JSON.stringify(
+    {
+      exportedAt: new Date().toISOString(),
+      notes: notesToExport.map(toExportableNote),
+    },
+    null,
+    2,
+  );
+
+  downloadFile(
+    `keepit-notes-${new Date().toISOString().slice(0, 10)}.json`,
+    content,
+    "application/json;charset=utf-8",
+  );
+}
+
+function exportNotesAsText(notesToExport: Note[]) {
+  const header = [
+    "KEEPIT NOTES TEXT EXPORT",
+    `exportedAt: ${new Date().toISOString()}`,
+    "Each note is stored as one JSON object per line.",
+    "",
+  ];
+
+  const lines = notesToExport.map((note) => JSON.stringify(toExportableNote(note)));
+  const content = [...header, ...lines].join("\n");
+
+  downloadFile(
+    `keepit-notes-${new Date().toISOString().slice(0, 10)}.txt`,
+    content,
+    "text/plain;charset=utf-8",
+  );
+}
+
+function parseImportedNote(value: unknown): NoteDraft | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const candidate = value as Partial<Note> & {
+    title?: string;
+    content?: string;
+    color?: string;
+    category?: string;
+    pinned?: boolean;
+  };
+
+  const category = importableCategories.includes(candidate.category as NoteCategory)
+    ? (candidate.category as NoteCategory)
+    : null;
+
+  if (!category) {
+    return null;
+  }
+
+  return {
+    title: typeof candidate.title === "string" ? candidate.title : "",
+    content:
+      typeof candidate.content === "string" && candidate.content.length > 0
+        ? candidate.content
+        : "<p></p>",
+    color:
+      typeof candidate.color === "string" && candidate.color.length > 0
+        ? candidate.color
+        : noteColors[0],
+    category,
+    pinned: Boolean(candidate.pinned),
+  };
+}
+
+function parseImportedNotesFromJson(text: string) {
+  const parsed = JSON.parse(text) as unknown;
+
+  if (Array.isArray(parsed)) {
+    return parsed.map(parseImportedNote).filter((note): note is NoteDraft => Boolean(note));
+  }
+
+  if (parsed && typeof parsed === "object" && "notes" in parsed) {
+    const notes = (parsed as { notes?: unknown }).notes;
+    if (Array.isArray(notes)) {
+      return notes.map(parseImportedNote).filter((note): note is NoteDraft => Boolean(note));
+    }
+  }
+
+  return [] as NoteDraft[];
+}
+
+function parseImportedNotesFromText(text: string) {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("{"))
+    .flatMap((line) => {
+      try {
+        const parsed = JSON.parse(line) as unknown;
+        const note = parseImportedNote(parsed);
+        return note ? [note] : [];
+      } catch {
+        return [] as NoteDraft[];
+      }
+    });
+}
+
 function Home() {
-  const { user, loading, isAuthenticated } = useContext(UserContext);
-  const [notes, setNotes] = useState<Note[]>(initialNotes);
+  const { user, loading } = useContext(UserContext);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [filter, setFilter] =
     useState<(typeof categories)[number]["value"]>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [draft, setDraft] = useState<NoteDraft>(defaultDraft);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
+  const [isLoadingNotes, setIsLoadingNotes] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const selectedNote = useMemo(
     () => notes.find((note) => note.id === selectedNoteId) ?? null,
     [notes, selectedNoteId],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadNotes = async () => {
+      if (loading) {
+        return;
+      }
+
+      if (!user) {
+        setNotes([]);
+        setSelectedNoteId(null);
+        setNotesError(null);
+        return;
+      }
+
+      setIsLoadingNotes(true);
+      setNotesError(null);
+
+      try {
+        const response = await getNotes();
+        if (cancelled) {
+          return;
+        }
+
+        setNotes(response.notes);
+        setSelectedNoteId((currentSelectedId) =>
+          response.notes.some((note) => note.id === currentSelectedId)
+            ? currentSelectedId
+            : null,
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setNotesError(getErrorMessage(error));
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingNotes(false);
+        }
+      }
+    };
+
+    loadNotes();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, user]);
 
   const visibleNotes = useMemo(() => {
     const normalizedSearch = normalizeSearchText(searchQuery);
@@ -159,50 +314,104 @@ function Home() {
     setIsComposerOpen(false);
   };
 
-  const saveNote = () => {
-    const trimmedTitle = draft.title.trim();
-    const noteTitle =
-      trimmedTitle || getPreviewTitle(draft.content) || "Untitled note";
-
-    if (selectedNote) {
-      setNotes((currentNotes) =>
-        currentNotes.map((note) =>
-          note.id === selectedNote.id
-            ? {
-                ...note,
-                title: noteTitle,
-                content: draft.content,
-                color: draft.color,
-                category: draft.category,
-                pinned: draft.pinned,
-                updatedAt: "Just now",
-              }
-            : note,
-        ),
-      );
-    } else {
-      const nextNote: Note = {
-        id: `${Date.now()}`,
-        title: noteTitle,
-        content: draft.content,
-        color: draft.color,
-        category: draft.category,
-        updatedAt: "Just now",
-        pinned: draft.pinned,
-      };
-
-      setNotes((currentNotes) => [nextNote, ...currentNotes]);
-      setSelectedNoteId(nextNote.id);
+  const saveNote = async () => {
+    if (!user) {
+      return;
     }
 
-    setIsComposerOpen(false);
+    const noteTitle = buildNoteTitle(draft.content, draft.title);
+
+    setIsSaving(true);
+    setNotesError(null);
+
+    try {
+      if (selectedNote) {
+        const response = await updateNote(selectedNote.id, {
+          ...draft,
+          title: noteTitle,
+        });
+
+        setNotes((currentNotes) =>
+          currentNotes.map((note) =>
+            note.id === selectedNote.id ? response.note : note,
+          ),
+        );
+        setSelectedNoteId(response.note.id);
+      } else {
+        const response = await createNote({
+          ...draft,
+          title: noteTitle,
+        });
+
+        setNotes((currentNotes) => [
+          response.note,
+          ...currentNotes.filter((note) => note.id !== response.note.id),
+        ]);
+        setSelectedNoteId(response.note.id);
+      }
+
+      setIsComposerOpen(false);
+    } catch (error) {
+      setNotesError(getErrorMessage(error));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const deleteNote = (id: string) => {
-    setNotes((currentNotes) => currentNotes.filter((note) => note.id !== id));
-    if (selectedNoteId === id) {
-      setSelectedNoteId(null);
-      setIsComposerOpen(false);
+  const removeNote = async (id: string) => {
+    setNotesError(null);
+
+    try {
+      await deleteNote(id);
+      setNotes((currentNotes) => currentNotes.filter((note) => note.id !== id));
+      setSelectedNoteId((currentSelectedId) =>
+        currentSelectedId === id ? null : currentSelectedId,
+      );
+
+      if (selectedNoteId === id) {
+        setIsComposerOpen(false);
+      }
+    } catch (error) {
+      setNotesError(getErrorMessage(error));
+    }
+  };
+
+  const handleImportNotes = async (file: File) => {
+    if (!user) {
+      return;
+    }
+
+    setIsImporting(true);
+    setNotesError(null);
+
+    try {
+      const text = await file.text();
+      const extension = file.name.split(".").pop()?.toLowerCase();
+
+      let importedNotes: NoteDraft[] = [];
+      if (extension === "json") {
+        importedNotes = parseImportedNotesFromJson(text);
+      } else {
+        importedNotes = parseImportedNotesFromText(text);
+      }
+
+      if (importedNotes.length === 0) {
+        throw new Error("No valid notes were found in the imported file");
+      }
+
+      for (const note of importedNotes) {
+        await createNote({
+          ...note,
+          title: buildNoteTitle(note.content, note.title),
+        });
+      }
+
+      const response = await getNotes();
+      setNotes(response.notes);
+    } catch (error) {
+      setNotesError(getErrorMessage(error));
+    } finally {
+      setIsImporting(false);
     }
   };
 
@@ -215,11 +424,11 @@ function Home() {
           onSearchChange={setSearchQuery}
         />
 
-        {loading ? (
+        {loading || isLoadingNotes ? (
           <div className="grid flex-1 place-items-center rounded-4xl border border-white/60 bg-white/70 text-slate-600 shadow-[0_18px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-            Loading notes...
+            {loading ? "Checking your session..." : "Loading notes..."}
           </div>
-        ) : isAuthenticated() ? (
+        ) : user ? (
           <main className="grid flex-1 gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
             <HomeSidebar
               userName={user?.name ?? "Guest profile"}
@@ -230,9 +439,19 @@ function Home() {
               onFilterChange={setFilter}
               notes={notes}
               onCreateNote={() => openComposer()}
+              onImportNotes={handleImportNotes}
+              onExportJson={() => exportNotesAsJson(notes)}
+              onExportText={() => exportNotesAsText(notes)}
+              isImporting={isImporting}
             />
 
             <section className="space-y-5">
+              {notesError && (
+                <div className="rounded-3xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                  {notesError}
+                </div>
+              )}
+
               <div className="rounded-4xl border border-white/70 bg-white/75 p-4 shadow-[0_18px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -259,7 +478,7 @@ function Home() {
                     key={note.id}
                     note={note}
                     onEdit={openComposer}
-                    onDelete={deleteNote}
+                    onDelete={removeNote}
                     previewText={getPreviewText(note.content)}
                   />
                 ))}
@@ -305,9 +524,10 @@ function Home() {
         draft={draft}
         noteColors={noteColors}
         categories={categories.filter((category) => category.value !== "All")}
+        isSaving={isSaving}
         onClose={closeComposer}
         onSave={saveNote}
-        onDelete={deleteNote}
+        onDelete={removeNote}
         onDraftChange={setDraft}
       />
     </div>

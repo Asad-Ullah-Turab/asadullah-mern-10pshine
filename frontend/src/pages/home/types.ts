@@ -13,6 +13,7 @@ export interface Note {
   category: NoteCategory;
   updatedAt: string;
   pinned: boolean;
+  createdAt?: string;
 }
 
 export interface NoteDraft {

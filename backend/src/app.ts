@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import authRouter from "./routes/auth/auth.router.ts";
+import notesRouter from "./routes/notes/notes.router.ts";
 import config from "./config/config.ts";
 import session from "express-session";
 import passport from "passport";
@@ -38,6 +39,7 @@ app.use(passport.session());
 
 // Routers
 app.use("/auth", authRouter);
+app.use("/notes", notesRouter);
 
 app.get("/", (_req, res) => {
   res.send("Hello World").status(200);
