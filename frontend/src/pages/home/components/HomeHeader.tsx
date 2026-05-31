@@ -1,18 +1,13 @@
 import Logo from "../../../components/ui/Logo";
-import { useNavigate } from "react-router";
 import { HomeSearchBar } from "./HomeSearchBar";
 
 export function HomeHeader({
-  onCreateNote,
   searchQuery,
   onSearchChange,
 }: {
-  onCreateNote: () => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
 }) {
-  const navigate = useNavigate();
-
   return (
     <header className="rounded-[28px] border border-white/60 bg-white/75 px-4 py-4 shadow-[0_18px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

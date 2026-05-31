@@ -34,7 +34,7 @@ function Login() {
     if (response.error) {
       setLoginError(response.error);
     } else {
-      console.log("Login successful:", response.user);
+      // console.log("Login successful:", response.user);
       if (response.user) {
         setUser(response.user);
       }
@@ -89,7 +89,10 @@ function Login() {
 
         <p className="mt-6 text-sm text-gray-600">
           Need an account?{" "}
-          <Link to="/signup" className="font-semibold text-blue-600 hover:underline">
+          <Link
+            to="/signup"
+            className="font-semibold text-blue-600 hover:underline"
+          >
             Sign up
           </Link>
         </p>
