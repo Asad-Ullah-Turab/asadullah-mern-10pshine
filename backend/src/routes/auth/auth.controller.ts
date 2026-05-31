@@ -11,6 +11,7 @@ import {
 import { deleteNotesByUserId } from "../../models/notes/notes.model.ts";
 import type { Profile as GoogleProfile } from "passport-google-oauth20";
 import type { Profile as GitHubProfile } from "passport-github2";
+import logger from "../../services/logger.ts";
 
 const verifyUser: VerifyFunction = async (email, password, done) => {
   const user = await checkUser({ email, password });
@@ -43,8 +44,10 @@ const verifyGoogleUser = async (
       email: profile.emails[0].value,
       type: ["google"],
     });
+    logger.info({ userId: user.id, email: user.email }, "user signed in with google");
     return done(null, user);
   } catch (error) {
+    logger.error({ err: error }, "google authentication failed");
     return done(error, null);
   }
 };
@@ -71,8 +74,10 @@ const verifyGitHubUser = async (
       email: profile.emails[0].value,
       type: ["github"],
     });
+    logger.info({ userId: user.id, email: user.email }, "user signed in with github");
     done(null, user);
   } catch (error) {
+    logger.error({ err: error }, "github authentication failed");
     return done(error, null);
   }
 };
@@ -95,6 +100,7 @@ const signUp = async (req: any, res: any) => {
           .status(500)
           .json({ message: "Error logging in after sign up" });
       }
+      req.log?.info({ userId: user.id, email: user.email }, "user signed up");
       return res.json({
         message: "User created and logged in successfully",
         user,
@@ -127,6 +133,8 @@ const updateProfile = async (req: any, res: any) => {
       return res.status(404).json({ message: "User not found" });
     }
 
+    req.log?.info({ userId: userId, name }, "user profile updated");
+
     return res.json({ user: updatedUser });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -146,6 +154,7 @@ const logout = async (req: any, res: any) => {
       }
 
       res.clearCookie("session");
+      req.log?.info({ userId: req.user?.id }, "user logged out");
       return res.json({ message: "Logged out successfully" });
     });
   });
@@ -165,6 +174,8 @@ const deleteAccount = async (req: any, res: any) => {
     if (!deleted) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    req.log?.info({ userId }, "user account deleted");
 
     req.logout((error: Error) => {
       if (error) {

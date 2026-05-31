@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import config from "../config/config.ts";
+import logger from "./logger.ts";
 
 const clientOptions: mongoose.ConnectOptions = {
   serverApi: { version: "1", strict: true, deprecationErrors: true },
@@ -14,9 +15,9 @@ async function connectToMongodb() {
       throw new Error("Failed to get MongoDB database instance");
     }
     await mongoose.connection.db.admin().command({ ping: 1 });
-    console.log("Successfully connected to MongoDB!");
+    logger.info({ uri: uri }, "connected to MongoDB");
   } catch (error) {
-    console.error("Error connecting to MongoDB:", error);
+    logger.error({ err: error }, "error connecting to MongoDB");
     throw error;
   }
 }
@@ -24,9 +25,9 @@ async function connectToMongodb() {
 async function disconnectMongodb() {
   try {
     await mongoose.disconnect();
-    console.log("Disconnected from MongoDB");
+    logger.info("disconnected from MongoDB");
   } catch (error) {
-    console.error("Error disconnecting from MongoDB:", error);
+    logger.error({ err: error }, "error disconnecting from MongoDB");
   }
 }
 

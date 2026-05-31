@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import userModel from "./user.mongoose.ts";
+import logger from "../../services/logger.ts";
 
 interface IUser {
   id: Types.ObjectId;
@@ -36,7 +37,7 @@ async function checkUser({
     }
     return null;
   } catch (error) {
-    console.error("Error fetching user:", error);
+    logger.error({ err: error }, "error fetching user");
     return null;
   }
 }
@@ -49,7 +50,7 @@ async function existsUserWithEmail(email: string) {
     }
     return true;
   } catch (error) {
-    console.error("Error checking user existence by email:", error);
+    logger.error({ err: error }, "error checking user existence by email");
     return false;
   }
 }
@@ -67,7 +68,7 @@ async function getUserByEmail(email: string) {
       type: user.type,
     } as IUser;
   } catch (error) {
-    console.error("Error fetching user by email:", error);
+    logger.error({ err: error }, "error fetching user by email");
     throw error;
   }
 }
@@ -95,7 +96,7 @@ async function createUser({
       type: newUser.type,
     } as IUser;
   } catch (error) {
-    console.error("Error creating user:", error);
+    logger.error({ err: error }, "error creating user");
     throw error;
   }
 }
@@ -120,7 +121,7 @@ async function addAuthTypeToUser(
       type: userDoc.type,
     } as IUser;
   } catch (error) {
-    console.error("Error adding auth type to user:", error);
+    logger.error({ err: error }, "error adding auth type to user");
     return null;
   }
 }
@@ -147,7 +148,7 @@ async function updateUserProfileById(
       type: userDoc.type,
     } as IUser;
   } catch (error) {
-    console.error("Error updating user profile:", error);
+    logger.error({ err: error }, "error updating user profile");
     throw error;
   }
 }
@@ -157,7 +158,7 @@ async function deleteUserById(userId: string) {
     const deletedUser = await userModel.findByIdAndDelete(userId);
     return Boolean(deletedUser);
   } catch (error) {
-    console.error("Error deleting user:", error);
+    logger.error({ err: error }, "error deleting user");
     throw error;
   }
 }

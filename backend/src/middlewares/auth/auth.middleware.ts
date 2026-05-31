@@ -1,6 +1,7 @@
 import passport from "passport";
 import type { IUser } from "../../models/user/user.model.ts";
 import type { Request, Response, NextFunction } from "express";
+import logger from "../../services/logger.ts";
 
 function localAuthMiddleware(req: Request, res: Response, next: NextFunction) {
   passport.authenticate(
@@ -10,12 +11,16 @@ function localAuthMiddleware(req: Request, res: Response, next: NextFunction) {
         return next(err);
       }
       if (!user) {
+        req.log?.warn({ email: req.body?.email }, "invalid login attempt");
+        logger.warn({ email: req.body?.email }, "invalid login attempt");
         return res.status(401).json({ success: false, message: info.message });
       }
       req.logIn(user, (err) => {
         if (err) {
           return next(err);
         }
+        req.log?.info({ userId: user.id, email: user.email }, "user logged in");
+        logger.info({ userId: user.id, email: user.email }, "user logged in");
         return res.json({ success: true, message: "Login successful", user });
       });
     },
@@ -26,6 +31,8 @@ function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) {
     return next();
   }
+  req.log?.warn({ path: req.path, method: req.method }, "unauthorized request");
+  logger.warn({ path: req.path, method: req.method }, "unauthorized request");
   return res.status(401).json({ success: false, message: "Unauthorized" });
 }
 
