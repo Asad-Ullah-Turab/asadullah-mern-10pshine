@@ -36,6 +36,7 @@ async function createNote(req: Request, res: Response) {
 	}
 
 	const note = await createNoteForUser(userId, req.body as INoteInput);
+	req.log?.info({ userId, noteId: note.id }, "note created");
 	return res.status(201).json({ note });
 }
 
@@ -59,6 +60,7 @@ async function updateNote(req: Request, res: Response) {
 	if (!note) {
 		return res.status(404).json({ message: "Note not found" });
 	}
+	req.log?.info({ userId, noteId }, "note updated");
 
 	return res.json({ note });
 }
@@ -78,6 +80,7 @@ async function removeNote(req: Request, res: Response) {
 	if (!note) {
 		return res.status(404).json({ message: "Note not found" });
 	}
+	req.log?.info({ userId, noteId }, "note deleted");
 
 	return res.json({ message: "Note deleted" });
 }

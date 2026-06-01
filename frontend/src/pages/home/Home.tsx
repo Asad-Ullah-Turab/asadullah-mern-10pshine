@@ -1,6 +1,12 @@
 import { useContext, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 import UserContext from "../../store/UserContext";
-import { type CategoryOption, type Note, type NoteDraft, type NoteCategory } from "./types";
+import {
+  type CategoryOption,
+  type Note,
+  type NoteDraft,
+  type NoteCategory,
+} from "./types";
 import { HomeHeader } from "./components/HomeHeader";
 import { HomeSidebar } from "./components/HomeSidebar";
 import { NoteCard } from "./components/NoteCard";
@@ -120,7 +126,9 @@ function exportNotesAsText(notesToExport: Note[]) {
     "",
   ];
 
-  const lines = notesToExport.map((note) => JSON.stringify(toExportableNote(note)));
+  const lines = notesToExport.map((note) =>
+    JSON.stringify(toExportableNote(note)),
+  );
   const content = [...header, ...lines].join("\n");
 
   downloadFile(
@@ -143,7 +151,9 @@ function parseImportedNote(value: unknown): NoteDraft | null {
     pinned?: boolean;
   };
 
-  const category = importableCategories.includes(candidate.category as NoteCategory)
+  const category = importableCategories.includes(
+    candidate.category as NoteCategory,
+  )
     ? (candidate.category as NoteCategory)
     : null;
 
@@ -170,13 +180,17 @@ function parseImportedNotesFromJson(text: string) {
   const parsed = JSON.parse(text) as unknown;
 
   if (Array.isArray(parsed)) {
-    return parsed.map(parseImportedNote).filter((note): note is NoteDraft => Boolean(note));
+    return parsed
+      .map(parseImportedNote)
+      .filter((note): note is NoteDraft => Boolean(note));
   }
 
   if (parsed && typeof parsed === "object" && "notes" in parsed) {
     const notes = (parsed as { notes?: unknown }).notes;
     if (Array.isArray(notes)) {
-      return notes.map(parseImportedNote).filter((note): note is NoteDraft => Boolean(note));
+      return notes
+        .map(parseImportedNote)
+        .filter((note): note is NoteDraft => Boolean(note));
     }
   }
 
@@ -510,9 +524,14 @@ function Home() {
                 You are not signed in.
               </h2>
               <p className="text-sm leading-6 text-slate-600">
-                Connect this page to your backend session flow and the notes
-                workspace will open here.
+                Please sign in to continue
               </p>
+              <Link
+                to="/login"
+                className="inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+              >
+                Go to login
+              </Link>
             </div>
           </div>
         )}

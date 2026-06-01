@@ -1,11 +1,16 @@
 import { Types } from "mongoose";
 import userModel from "./user.mongoose.ts";
+import logger from "../../services/logger.ts";
 
 interface IUser {
   id: Types.ObjectId;
   name: string;
   email: string;
   type: Array<"local" | "google" | "github">;
+}
+
+interface IUserProfileUpdate {
+  name?: string;
 }
 
 async function checkUser({
@@ -32,7 +37,7 @@ async function checkUser({
     }
     return null;
   } catch (error) {
-    console.error("Error fetching user:", error);
+    logger.error({ err: error }, "error fetching user");
     return null;
   }
 }
@@ -45,7 +50,7 @@ async function existsUserWithEmail(email: string) {
     }
     return true;
   } catch (error) {
-    console.error("Error checking user existence by email:", error);
+    logger.error({ err: error }, "error checking user existence by email");
     return false;
   }
 }
@@ -63,7 +68,7 @@ async function getUserByEmail(email: string) {
       type: user.type,
     } as IUser;
   } catch (error) {
-    console.error("Error fetching user by email:", error);
+    logger.error({ err: error }, "error fetching user by email");
     throw error;
   }
 }
@@ -91,7 +96,7 @@ async function createUser({
       type: newUser.type,
     } as IUser;
   } catch (error) {
-    console.error("Error creating user:", error);
+    logger.error({ err: error }, "error creating user");
     throw error;
   }
 }
@@ -116,8 +121,45 @@ async function addAuthTypeToUser(
       type: userDoc.type,
     } as IUser;
   } catch (error) {
-    console.error("Error adding auth type to user:", error);
+    logger.error({ err: error }, "error adding auth type to user");
     return null;
+  }
+}
+
+async function updateUserProfileById(
+  userId: string,
+  updates: IUserProfileUpdate,
+) {
+  try {
+    const userDoc = await userModel.findByIdAndUpdate(
+      userId,
+      { $set: { ...(updates.name ? { name: updates.name.trim() } : {}) } },
+      { new: true, runValidators: true },
+    );
+
+    if (!userDoc) {
+      return null;
+    }
+
+    return {
+      id: userDoc._id,
+      name: userDoc.name,
+      email: userDoc.email,
+      type: userDoc.type,
+    } as IUser;
+  } catch (error) {
+    logger.error({ err: error }, "error updating user profile");
+    throw error;
+  }
+}
+
+async function deleteUserById(userId: string) {
+  try {
+    const deletedUser = await userModel.findByIdAndDelete(userId);
+    return Boolean(deletedUser);
+  } catch (error) {
+    logger.error({ err: error }, "error deleting user");
+    throw error;
   }
 }
 
@@ -127,5 +169,7 @@ export {
   getUserByEmail,
   createUser,
   addAuthTypeToUser,
+  updateUserProfileById,
+  deleteUserById,
   type IUser,
 };

@@ -1,4 +1,5 @@
 import Logo from "../../../components/ui/Logo";
+import { useNavigate } from "react-router";
 import { HomeSearchBar } from "./HomeSearchBar";
 
 export function HomeHeader({
@@ -10,6 +11,8 @@ export function HomeHeader({
   searchQuery: string;
   onSearchChange: (value: string) => void;
 }) {
+  const navigate = useNavigate();
+
   return (
     <header className="rounded-[28px] border border-white/60 bg-white/75 px-4 py-4 shadow-[0_18px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -24,14 +27,6 @@ export function HomeHeader({
             </h1>
           </div>
         </div>
-
-        <button
-          type="button"
-          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md lg:self-start"
-          onClick={onCreateNote}
-        >
-          + New note
-        </button>
       </div>
 
       <div className="mt-4">

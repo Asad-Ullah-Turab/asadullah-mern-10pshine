@@ -5,9 +5,13 @@ import {
   checkUser,
   getUserByEmail,
   addAuthTypeToUser,
+  updateUserProfileById,
+  deleteUserById,
 } from "../../models/user/user.model.ts";
+import { deleteNotesByUserId } from "../../models/notes/notes.model.ts";
 import type { Profile as GoogleProfile } from "passport-google-oauth20";
 import type { Profile as GitHubProfile } from "passport-github2";
+import logger from "../../services/logger.ts";
 
 const verifyUser: VerifyFunction = async (email, password, done) => {
   const user = await checkUser({ email, password });
@@ -40,8 +44,10 @@ const verifyGoogleUser = async (
       email: profile.emails[0].value,
       type: ["google"],
     });
+    logger.info({ userId: user.id, email: user.email }, "user signed in with google");
     return done(null, user);
   } catch (error) {
+    logger.error({ err: error }, "google authentication failed");
     return done(error, null);
   }
 };
@@ -68,8 +74,10 @@ const verifyGitHubUser = async (
       email: profile.emails[0].value,
       type: ["github"],
     });
+    logger.info({ userId: user.id, email: user.email }, "user signed in with github");
     done(null, user);
   } catch (error) {
+    logger.error({ err: error }, "github authentication failed");
     return done(error, null);
   }
 };
@@ -92,8 +100,91 @@ const signUp = async (req: any, res: any) => {
           .status(500)
           .json({ message: "Error logging in after sign up" });
       }
+      req.log?.info({ userId: user.id, email: user.email }, "user signed up");
       return res.json({
         message: "User created and logged in successfully",
+        user,
+      });
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ message });
+  }
+};
+
+const updateProfile = async (req: any, res: any) => {
+  const userId = req.user?.id;
+  const { name } = req.body;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  if (!name || typeof name !== "string" || !name.trim()) {
+    return res.status(400).json({ message: "Name is required" });
+  }
+
+  try {
+    const updatedUser = await updateUserProfileById(String(userId), {
+      name,
+    });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    req.log?.info({ userId: userId, name }, "user profile updated");
+
+    return res.json({ user: updatedUser });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({ message });
+  }
+};
+
+const logout = async (req: any, res: any) => {
+  req.logout((error: Error) => {
+    if (error) {
+      return res.status(500).json({ message: "Failed to logout" });
+    }
+
+    req.session.destroy((sessionError: Error) => {
+      if (sessionError) {
+        return res.status(500).json({ message: "Failed to logout" });
+      }
+
+      res.clearCookie("session");
+      req.log?.info({ userId: req.user?.id }, "user logged out");
+      return res.json({ message: "Logged out successfully" });
+    });
+  });
+};
+
+const deleteAccount = async (req: any, res: any) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  try {
+    await deleteNotesByUserId(String(userId));
+    const deleted = await deleteUserById(String(userId));
+
+    if (!deleted) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    req.log?.info({ userId }, "user account deleted");
+
+    req.logout((error: Error) => {
+      if (error) {
+        return res.status(500).json({ message: "Failed to delete account" });
+      }
+
+      req.session.destroy(() => {
+        res.clearCookie("session");
+        return res.json({ message: "Account deleted successfully" });
       });
     });
   } catch (error) {
@@ -108,4 +199,7 @@ export {
   verifyGitHubUser,
   getAuthenticatedUser,
   signUp,
+  updateProfile,
+  logout,
+  deleteAccount,
 };

@@ -5,8 +5,9 @@ import AuthWithGithubBtn from "./components/AuthWithGithubBtn";
 import AuthWithGoogleBtn from "./components/AuthWithGoogleBtn";
 import FormError from "./components/FormError";
 import { signUpWithEmailPassword } from "../../api/auth";
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router";
+import UserContext from "../../store/UserContext";
 
 interface IFormInput {
   name: string;
@@ -18,6 +19,7 @@ interface IFormInput {
 function Signup() {
   const [signUpError, setSignUpError] = useState<string>("");
   const navigate = useNavigate();
+  const { setUser } = useContext(UserContext);
 
   const handleSingup: SubmitHandler<IFormInput> = async ({
     name,
@@ -29,6 +31,9 @@ function Signup() {
       setSignUpError(response.error);
     } else {
       setSignUpError("");
+      if (response.user) {
+        setUser(response.user);
+      }
       navigate("/");
     }
   };
@@ -131,6 +136,13 @@ function Signup() {
           <AuthWithGoogleBtn text="Signup With Google" />
           <AuthWithGithubBtn text="Signup With GitHub" />
         </div>
+
+        <p className="mt-6 text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link to="/login" className="font-semibold text-blue-600 hover:underline">
+            Log in
+          </Link>
+        </p>
       </div>
     </div>
   );

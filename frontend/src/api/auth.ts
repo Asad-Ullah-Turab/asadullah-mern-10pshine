@@ -1,4 +1,5 @@
 import config from "../config/config";
+import type { IUser } from "../types/User";
 
 async function LoginWithEmailPassword(email: string, password: string) {
   try {
@@ -72,4 +73,78 @@ async function signUpWithEmailPassword(
   }
 }
 
-export { LoginWithEmailPassword, GetLoggedInUser, signUpWithEmailPassword };
+async function updateProfileName(name: string) {
+  try {
+    const response = await fetch(config.BACKEND_URL + "/auth/me", {
+      method: "PUT",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ name }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return {
+        error: data.message || "Failed to update profile",
+      };
+    }
+    return { user: data.user as IUser };
+  } catch (error) {
+    console.error("Profile update failed:", error);
+    return {
+      error: "An error occurred while updating your profile.",
+    };
+  }
+}
+
+async function logoutUser() {
+  try {
+    const response = await fetch(config.BACKEND_URL + "/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return {
+        error: data.message || "Logout failed",
+      };
+    }
+    return { message: data.message as string };
+  } catch (error) {
+    console.error("Logout failed:", error);
+    return {
+      error: "An error occurred while logging out.",
+    };
+  }
+}
+
+async function deleteAccount() {
+  try {
+    const response = await fetch(config.BACKEND_URL + "/auth/me", {
+      method: "DELETE",
+      credentials: "include",
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      return {
+        error: data.message || "Delete account failed",
+      };
+    }
+    return { message: data.message as string };
+  } catch (error) {
+    console.error("Account deletion failed:", error);
+    return {
+      error: "An error occurred while deleting your account.",
+    };
+  }
+}
+
+export {
+  LoginWithEmailPassword,
+  GetLoggedInUser,
+  signUpWithEmailPassword,
+  updateProfileName,
+  logoutUser,
+  deleteAccount,
+};

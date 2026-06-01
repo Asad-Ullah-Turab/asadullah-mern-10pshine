@@ -6,11 +6,15 @@ import config from "./config/config.ts";
 import session from "express-session";
 import passport from "passport";
 import MongoStore from "connect-mongo";
+import httpLogger from "./middlewares/logging/http-logger.middleware.ts";
+import logger from "./services/logger.ts";
+import type { NextFunction, Request, Response } from "express";
 
 const app = express();
 
 // Middlewares
 app.use(express.json());
+app.use(httpLogger);
 app.use(
   cors({
     origin: config.FRONTEND_URL,
@@ -43,6 +47,12 @@ app.use("/notes", notesRouter);
 
 app.get("/", (_req, res) => {
   res.send("Hello World").status(200);
+});
+
+app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+  req.log?.error({ err }, "unhandled application error");
+  logger.error({ err }, "unhandled application error");
+  res.status(500).json({ message: "Internal server error" });
 });
 
 export default app;

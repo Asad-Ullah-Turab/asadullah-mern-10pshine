@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import type { CategoryOption, Note } from "../types";
+import { useNavigate } from "react-router";
 
 interface HomeSidebarProps {
   userName: string;
@@ -31,12 +32,14 @@ export function HomeSidebar({
   isImporting,
 }: HomeSidebarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const navigate = useNavigate();
 
   return (
     <aside className="rounded-4xl border border-white/70 bg-white/75 p-4 shadow-[0_18px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
       <button
         type="button"
         className="mb-5 flex w-full items-center gap-3 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 text-left transition hover:bg-white"
+        onClick={() => navigate("/profile")}
       >
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-amber-400 to-orange-500 text-lg font-semibold text-white shadow-lg shadow-orange-500/20">
           {userInitial}
