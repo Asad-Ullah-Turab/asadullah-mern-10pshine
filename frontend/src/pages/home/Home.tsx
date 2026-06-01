@@ -1,217 +1,26 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import UserContext from "../../store/UserContext";
-import {
-  type CategoryOption,
-  type Note,
-  type NoteDraft,
-  type NoteCategory,
-} from "./types";
+import { type Note, type NoteDraft } from "./types";
 import { HomeHeader } from "./components/HomeHeader";
 import { HomeSidebar } from "./components/HomeSidebar";
 import { NoteCard } from "./components/NoteCard";
 import { NoteEditorModal } from "./components/NoteEditorModal";
 import { createNote, deleteNote, getNotes, updateNote } from "../../api/notes";
-
-const categories: CategoryOption[] = [
-  { label: "All notes", value: "All" },
-  { label: "Ideas", value: "Ideas" },
-  { label: "Work", value: "Work" },
-  { label: "Personal", value: "Personal" },
-  { label: "Research", value: "Research" },
-];
-
-const noteColors = [
-  "#fff7b2",
-  "#dbeafe",
-  "#d9f99d",
-  "#fee2e2",
-  "#f5d0fe",
-  "#f3f4f6",
-];
-
-const defaultDraft: NoteDraft = {
-  title: "",
-  content: "<p></p>",
-  color: noteColors[0],
-  category: "Ideas",
-  pinned: false,
-};
-
-const importableCategories: NoteCategory[] = [
-  "Ideas",
-  "Work",
-  "Personal",
-  "Research",
-];
-
-function stripHtml(html: string) {
-  return html
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function getPreviewTitle(html: string) {
-  const text = stripHtml(html);
-  return text.length > 20 ? `${text.slice(0, 20)}…` : text;
-}
-
-function getPreviewText(html: string) {
-  const text = stripHtml(html);
-  return text.length > 140 ? `${text.slice(0, 140)}…` : text;
-}
-
-function normalizeSearchText(value: string) {
-  return value.toLowerCase().trim();
-}
-
-function buildNoteTitle(content: string, title: string) {
-  const trimmedTitle = title.trim();
-  return trimmedTitle || getPreviewTitle(content) || "Untitled note";
-}
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Something went wrong";
-}
-
-function downloadFile(filename: string, content: string, mimeType: string) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = filename;
-  link.click();
-
-  URL.revokeObjectURL(url);
-}
-
-function toExportableNote(note: Note) {
-  return {
-    id: note.id,
-    title: note.title,
-    content: note.content,
-    color: note.color,
-    category: note.category,
-    pinned: note.pinned,
-    createdAt: note.createdAt,
-    updatedAt: note.updatedAt,
-  };
-}
-
-function exportNotesAsJson(notesToExport: Note[]) {
-  const content = JSON.stringify(
-    {
-      exportedAt: new Date().toISOString(),
-      notes: notesToExport.map(toExportableNote),
-    },
-    null,
-    2,
-  );
-
-  downloadFile(
-    `keepit-notes-${new Date().toISOString().slice(0, 10)}.json`,
-    content,
-    "application/json;charset=utf-8",
-  );
-}
-
-function exportNotesAsText(notesToExport: Note[]) {
-  const header = [
-    "KEEPIT NOTES TEXT EXPORT",
-    `exportedAt: ${new Date().toISOString()}`,
-    "Each note is stored as one JSON object per line.",
-    "",
-  ];
-
-  const lines = notesToExport.map((note) =>
-    JSON.stringify(toExportableNote(note)),
-  );
-  const content = [...header, ...lines].join("\n");
-
-  downloadFile(
-    `keepit-notes-${new Date().toISOString().slice(0, 10)}.txt`,
-    content,
-    "text/plain;charset=utf-8",
-  );
-}
-
-function parseImportedNote(value: unknown): NoteDraft | null {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const candidate = value as Partial<Note> & {
-    title?: string;
-    content?: string;
-    color?: string;
-    category?: string;
-    pinned?: boolean;
-  };
-
-  const category = importableCategories.includes(
-    candidate.category as NoteCategory,
-  )
-    ? (candidate.category as NoteCategory)
-    : null;
-
-  if (!category) {
-    return null;
-  }
-
-  return {
-    title: typeof candidate.title === "string" ? candidate.title : "",
-    content:
-      typeof candidate.content === "string" && candidate.content.length > 0
-        ? candidate.content
-        : "<p></p>",
-    color:
-      typeof candidate.color === "string" && candidate.color.length > 0
-        ? candidate.color
-        : noteColors[0],
-    category,
-    pinned: Boolean(candidate.pinned),
-  };
-}
-
-function parseImportedNotesFromJson(text: string) {
-  const parsed = JSON.parse(text) as unknown;
-
-  if (Array.isArray(parsed)) {
-    return parsed
-      .map(parseImportedNote)
-      .filter((note): note is NoteDraft => Boolean(note));
-  }
-
-  if (parsed && typeof parsed === "object" && "notes" in parsed) {
-    const notes = (parsed as { notes?: unknown }).notes;
-    if (Array.isArray(notes)) {
-      return notes
-        .map(parseImportedNote)
-        .filter((note): note is NoteDraft => Boolean(note));
-    }
-  }
-
-  return [] as NoteDraft[];
-}
-
-function parseImportedNotesFromText(text: string) {
-  return text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith("{"))
-    .flatMap((line) => {
-      try {
-        const parsed = JSON.parse(line) as unknown;
-        const note = parseImportedNote(parsed);
-        return note ? [note] : [];
-      } catch {
-        return [] as NoteDraft[];
-      }
-    });
-}
+import {
+  buildNoteTitle,
+  categories,
+  defaultDraft,
+  exportNotesAsJson,
+  exportNotesAsText,
+  getErrorMessage,
+  getPreviewText,
+  normalizeSearchText,
+  noteColors,
+  parseImportedNotesFromJson,
+  parseImportedNotesFromText,
+  stripHtml,
+} from "./utils";
 
 function Home() {
   const { user, loading } = useContext(UserContext);
@@ -432,11 +241,7 @@ function Home() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(253,224,71,0.22),transparent_30%),radial-gradient(circle_at_top_right,rgba(251,146,60,0.16),transparent_22%),linear-gradient(180deg,#fffaf0_0%,#f8fafc_36%,#eef2ff_100%)] text-slate-900">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-5 px-4 py-4 sm:px-6 lg:px-8">
-        <HomeHeader
-          onCreateNote={() => openComposer()}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
+        <HomeHeader searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
         {loading || isLoadingNotes ? (
           <div className="grid flex-1 place-items-center rounded-4xl border border-white/60 bg-white/70 text-slate-600 shadow-[0_18px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
